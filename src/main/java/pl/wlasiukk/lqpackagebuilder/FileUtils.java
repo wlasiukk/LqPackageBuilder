@@ -1,0 +1,152 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+package pl.wlasiukk.lqpackagebuilder;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
+import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class FileUtils {
+    private static final Logger LOGGER = Logger.getLogger(FileUtils.class.getName());
+
+    public FileUtils() {
+    }
+
+    public static String buildPath(String[] paths) {
+        String dirSeparator = File.separator;
+        String outStr = "";
+        String lastPath = "";
+        int pathNr = 0;
+        String[] var5 = paths;
+        int var6 = paths.length;
+
+        for(int var7 = 0; var7 < var6; ++var7) {
+            String path = var5[var7];
+            ++pathNr;
+            if (pathNr > 1 && !path.startsWith(dirSeparator) && !lastPath.endsWith(dirSeparator)) {
+                outStr = outStr + dirSeparator;
+            }
+
+            outStr = outStr + path;
+            lastPath = path;
+        }
+
+        return outStr;
+    }
+
+    public static void createDirectory(String directoryPath, String directoryName) {
+        if (!Files.exists(Paths.get(directoryPath), new LinkOption[0])) {
+            boolean dirCreated = (new File(directoryPath)).mkdirs();
+            if (dirCreated) {
+                LOGGER.log(Level.FINEST, "{0} created : {1} ", new Object[]{directoryName, directoryPath});
+            }
+        }
+
+    }
+
+    public static String findOneFileByName(String directoryName, String fileNameRegexp) {
+        if (directoryName == null) {
+            throw new NoSuchElementException("File " + fileNameRegexp + " not found, empty directory");
+        } else {
+            File dir = new File(directoryName);
+            File[] matches = dir.listFiles(new FileUtilsFilter(fileNameRegexp));
+            if (matches != null && matches.length > 0) {
+                return matches[0].getAbsolutePath();
+            } else {
+                throw new NoSuchElementException("File " + fileNameRegexp + " not found in directory " + directoryName);
+            }
+        }
+    }
+
+    public static boolean dirHaveFile(String directoryName, String fileNameRegexp) {
+        boolean foundFile = false;
+
+        try {
+            findOneFileByName(directoryName, fileNameRegexp);
+            foundFile = true;
+        } catch (NoSuchElementException var4) {
+            foundFile = false;
+        }
+
+        return foundFile;
+    }
+
+    public static String findFileRecurseUp(String directoryName, String fileNameRegexp) {
+        if (directoryName == null) {
+            throw new NoSuchElementException("File " + fileNameRegexp + " not found, empty directory ");
+        } else {
+            String currentDir = directoryName;
+            new File(directoryName);
+
+            while(currentDir != null && !dirHaveFile(currentDir, fileNameRegexp)) {
+                File dir = new File(currentDir);
+                currentDir = dir.getParent();
+            }
+
+            if (currentDir == null) {
+                throw new NoSuchElementException("File " + fileNameRegexp + " not found in directory " + directoryName);
+            } else {
+                return currentDir;
+            }
+        }
+    }
+
+    public static boolean isThereFileInParentDirectories(String directoryName, String fileNameRegexp) {
+        try {
+            findFileRecurseUp(directoryName, fileNameRegexp);
+            return true;
+        } catch (NoSuchElementException var3) {
+            return false;
+        }
+    }
+
+    static String readFile(String path) throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, StandardCharsets.UTF_8);
+    }
+
+    static boolean isApexSource(BuilderContext builderContext, String filename) {
+        String fullInputFilePath = buildPath(new String[]{builderContext.getSourceDirectory(), filename});
+        return isThereFileInParentDirectories((new File(fullInputFilePath)).getParent(), "apex_source");
+    }
+
+    static String getFileExtension(String fileName) {
+        String extension = "";
+        int i = fileName.lastIndexOf(46);
+        if (i > 0) {
+            extension = fileName.substring(i + 1);
+        }
+
+        return extension;
+    }
+
+    static String getFileNameWithoutExtention(String fileName) {
+        String extension = getFileExtension(fileName);
+        return extension != null && extension.length() > 0 ? fileName.substring(0, fileName.length() - extension.length()) : fileName;
+    }
+
+
+
+    final static class FileUtilsFilter implements FilenameFilter {
+        private String fileNameRegexp;
+
+        FileUtilsFilter(String var1) {
+            this.fileNameRegexp = var1;
+        }
+
+        public boolean accept(File dir, String name) {
+            return name.matches(this.fileNameRegexp);
+        }
+    }
+
+}

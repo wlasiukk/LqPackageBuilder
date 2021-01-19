@@ -1,0 +1,40 @@
+
+
+..\sourceDirectory\
+  .git\
+  src\
+    someSourceFile.sql
+  outputDirectory\
+	versionChangeLogName.xml
+	packageName\
+	  package.xml
+	  installDirectory\
+	    someSourceFile.sql
+	  rollback\
+	    someSourceFile_rollback.sql
+
+
+ie:
+
+..\repo_lcore_dbsrc	  
+ .git\
+  src\
+    lcore\
+      table\
+        load_error-alter-1.sql
+  changes\
+    master_changelog.xml
+      v1.0.0\
+        version100.xml
+        NOJIRA_0000001\       
+          NOJIRA_0000001.xml
+          install\
+            lcore\
+              table\
+                load_error-alter-1.sql
+          rollback\
+            lcore\
+              table\
+                load_error-alter-1_rollback.sql
+                
+                
