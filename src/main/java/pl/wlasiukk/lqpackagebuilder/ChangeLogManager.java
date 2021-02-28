@@ -5,11 +5,9 @@
 
 package pl.wlasiukk.lqpackagebuilder;
 
-import com.ximpleware.AutoPilot;
-import com.ximpleware.NavException;
-import com.ximpleware.VTDGen;
-import com.ximpleware.VTDNav;
-import com.ximpleware.XMLModifier;
+import com.ximpleware.*;
+import jdk.incubator.jpackage.internal.Log;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -98,14 +96,44 @@ public class ChangeLogManager {
     }
 
     private static String getNextChangeSetId(BuilderContext builderContext, VTDNav vn) throws NavException {
-        int changeSetNumber = 1;
+        int newChangeSetIdNumber = 1;
 
         String changeSetId;
-        for(changeSetId = builderContext.getPackageName() + "." + changeSetNumber; isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn); changeSetId = builderContext.getPackageName() + "." + changeSetNumber) {
-            ++changeSetNumber;
+/*
+        for(changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber; isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn); changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber) {
+            ++newChangeSetIdNumber;
         }
 
-        return changeSetId;
+ */
+        AutoPilot autoPilotChangesets = new AutoPilot(vn);
+
+        try {
+            autoPilotChangesets.selectXPath("changeSet");
+            int currentId = newChangeSetIdNumber;
+            while(autoPilotChangesets.evalXPath() != -1) {
+                int attrId = vn.getAttrVal("id");
+                String attrIdString = vn.toNormalizedString(attrId);
+                String[] attrIdStringSplitted = attrIdString.split("\\.");
+                if (attrIdStringSplitted.length>0) {
+                    try {
+                        currentId = Integer.parseInt(attrIdStringSplitted[attrIdStringSplitted.length - 1]);
+                        if (currentId>newChangeSetIdNumber) {
+                            newChangeSetIdNumber=currentId+1;
+                        }
+                    } catch (NumberFormatException nfe){
+                        // doing nothing, changeset id was nat ended by number - manual modified ?
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.info("computing NextChangeSetId in safer way, but it is finding first gap in numeration ...");
+            for(changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber; isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn); changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber) {
+                ++newChangeSetIdNumber;
+            }
+        }
+
+        return builderContext.getPackageName() + "." + newChangeSetIdNumber;
     }
 
     public static void addTag(BuilderContext builderContext, String tagName, boolean afterHead) throws Exception {
