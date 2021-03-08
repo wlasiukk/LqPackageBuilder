@@ -117,9 +117,10 @@ public class ChangeLogManager {
                 if (attrIdStringSplitted.length>0) {
                     try {
                         currentId = Integer.parseInt(attrIdStringSplitted[attrIdStringSplitted.length - 1]);
-                        if (currentId>newChangeSetIdNumber) {
+                        if (currentId>=newChangeSetIdNumber) {
                             newChangeSetIdNumber=currentId+1;
                         }
+                        LOGGER.finer("found currentId="+currentId+"; newChangeSetIdNumber="+newChangeSetIdNumber);
                     } catch (NumberFormatException nfe){
                         // doing nothing, changeset id was nat ended by number - manual modified ?
                     }
@@ -132,8 +133,9 @@ public class ChangeLogManager {
                 ++newChangeSetIdNumber;
             }
         }
-
-        return builderContext.getPackageName() + "." + newChangeSetIdNumber;
+        String newId = builderContext.getPackageName() + "." + newChangeSetIdNumber;
+        LOGGER.finer("new id = "+newId);
+        return newId;
     }
 
     public static void addTag(BuilderContext builderContext, String tagName, boolean afterHead) throws Exception {
