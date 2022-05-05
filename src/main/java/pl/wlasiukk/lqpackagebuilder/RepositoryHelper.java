@@ -158,6 +158,9 @@ public class RepositoryHelper {
     public static String getLastHeadVersion(BuilderContext builderContext, String file) throws IOException {
         Repository localRepository = getRepository(builderContext);
         Ref head = localRepository.exactRef("refs/heads/master");
+        if (head == null){
+            return ""; // not using master ?? TODO
+        }
         String s = fetchBlob(localRepository, head.getName(), file);
         return s;
     }

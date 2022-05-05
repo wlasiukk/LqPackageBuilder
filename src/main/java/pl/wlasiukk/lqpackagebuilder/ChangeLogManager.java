@@ -6,7 +6,6 @@
 package pl.wlasiukk.lqpackagebuilder;
 
 import com.ximpleware.*;
-import jdk.incubator.jpackage.internal.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -128,7 +127,7 @@ public class ChangeLogManager {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.info("computing NextChangeSetId in safer way, but it is finding first gap in numeration ...");
+            LOGGER.info("computing NextChangeSetId in safer way, but it is finding first gap in numeration ...");
             for(changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber; isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn); changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber) {
                 ++newChangeSetIdNumber;
             }
