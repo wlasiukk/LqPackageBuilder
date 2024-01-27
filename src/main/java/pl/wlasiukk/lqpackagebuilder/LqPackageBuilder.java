@@ -21,19 +21,19 @@ public class LqPackageBuilder {
 
     public void buildPackage() throws Exception {
         OneFileProcessor oneFileProcessor = new OneFileProcessor(this.builderContext);
-        Object changedFiles;
+        Set changedFiles;
         if (this.builderContext.getFileName() != null && !this.builderContext.getFileName().isEmpty()) {
             changedFiles = new HashSet();
-            ((Set)changedFiles).add(this.builderContext.getFileName());
+            changedFiles.add(this.builderContext.getFileName());
             RepositoryHelper.setOneChangedFile(this.builderContext.getFileName(), "M");
         } else {
             changedFiles = RepositoryHelper.getChangedFiles(this.builderContext);
         }
 
-        Iterator var3 = ((Set)changedFiles).iterator();
+        Iterator changedFilesIterator = ((Set)changedFiles).iterator();
 
-        while(var3.hasNext()) {
-            String changedFile = (String)var3.next();
+        while(changedFilesIterator.hasNext()) {
+            String changedFile = (String)changedFilesIterator.next();
             LOGGER.log(Level.INFO, "processing {0}", changedFile);
             oneFileProcessor.processFile(changedFile);
         }

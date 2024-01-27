@@ -6,6 +6,7 @@
 package pl.wlasiukk.lqpackagebuilder;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
@@ -24,7 +25,6 @@ public class OneFileProcessor {
     }
 
     public void processFile(String fileName) throws Exception {
-        String initFileName = "init.sql";
         String originalFileName = fileName;
         String fullInputFilePath = FileUtils.buildPath(new String[]{this.builderContext.getSourceDirectory(), fileName});
         String fullOutputFilePath = FileUtils.buildPath(new String[]{this.builderContext.getSourceDirectory(), this.builderContext.getOutputDirectory(), this.builderContext.getPackageName(), this.builderContext.getInstallDirectory(), fileName});
@@ -35,11 +35,11 @@ public class OneFileProcessor {
                 LOGGER.fine("file " + fileName + " already exists, creating new version in change");
                 int fileVersion = 1;
                 initFolder = FileUtils.getFileExtension(fileName);
-                String fileNameWithoutExtention = FileUtils.getFileNameWithoutExtention(fileName);
+                String fileNameWithoutExtension = FileUtils.getFileNameWithoutExtension(fileName);
 
-                while(Files.exists(Paths.get(fullOutputFilePath), new LinkOption[0])) {
+                while (Files.exists(Paths.get(fullOutputFilePath), new LinkOption[0])) {
                     ++fileVersion;
-                    fileName = fileNameWithoutExtention + "v" + fileVersion + "." + initFolder;
+                    fileName = fileNameWithoutExtension + "v" + fileVersion + "." + initFolder;
                     fullOutputFilePath = FileUtils.buildPath(new String[]{this.builderContext.getSourceDirectory(), this.builderContext.getOutputDirectory(), this.builderContext.getPackageName(), this.builderContext.getInstallDirectory(), fileName});
                     LOGGER.finest("trying new version of file " + fileName);
                 }
@@ -61,7 +61,21 @@ public class OneFileProcessor {
                     LOGGER.info("init.sql file not found");
                 }
 
-                Files.write(Paths.get(fullOutputFilePath), (OracleApexFileConverter.convertApexSqlToLiquibaseFormat(initSource) + "\n\n\nbegin\n  wwv_flow_api.g_mode := 'REPLACE';\nend;\n/\n\n\n" + OracleApexFileConverter.convertApexSqlToLiquibaseFormat(FileUtils.readFile(fullOutputFilePath))).getBytes(), new OpenOption[]{StandardOpenOption.TRUNCATE_EXISTING});
+                Files.write(
+                        Paths.get(fullOutputFilePath),
+                        (OracleApexFileConverter.convertApexSqlToLiquibaseFormat(initSource) +
+                                "\n\n\nbegin\n  wwv_flow_api.g_mode := 'REPLACE';\nend;\n/\n\n\n" +
+                                OracleApexFileConverter.convertApexSqlToLiquibaseFormat(FileUtils.readFile(fullOutputFilePath))
+                        ).getBytes(),
+                        new OpenOption[]{StandardOpenOption.TRUNCATE_EXISTING});
+            } else if (FileUtils.isTemplateProvided(this.builderContext, fileName)) {
+                String templateFileName = FileUtils.getLastFoundFile();
+                LOGGER.info("TEMPLATE source detected - applying converter");
+                Files.write(
+                        Paths.get(fullOutputFilePath),
+                        TemplateProcessor.run(templateFileName, fullOutputFilePath).getBytes(StandardCharsets.UTF_8),
+                        new OpenOption[]{StandardOpenOption.TRUNCATE_EXISTING}
+                );
             }
         }
 

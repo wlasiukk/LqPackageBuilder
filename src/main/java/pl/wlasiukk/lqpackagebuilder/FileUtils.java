@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 public class FileUtils {
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class.getName());
+    private static String lastFoundFile;
 
     public FileUtils() {
     }
@@ -72,7 +73,7 @@ public class FileUtils {
         boolean foundFile = false;
 
         try {
-            findOneFileByName(directoryName, fileNameRegexp);
+            lastFoundFile = findOneFileByName(directoryName, fileNameRegexp);
             foundFile = true;
         } catch (NoSuchElementException var4) {
             foundFile = false;
@@ -102,6 +103,7 @@ public class FileUtils {
     }
 
     public static boolean isThereFileInParentDirectories(String directoryName, String fileNameRegexp) {
+        lastFoundFile = null;
         try {
             findFileRecurseUp(directoryName, fileNameRegexp);
             return true;
@@ -120,6 +122,15 @@ public class FileUtils {
         return isThereFileInParentDirectories((new File(fullInputFilePath)).getParent(), "apex_source");
     }
 
+    static boolean isTemplateProvided(BuilderContext builderContext, String filename) {
+        String fullInputFilePath = buildPath(new String[]{builderContext.getSourceDirectory(), filename});
+        return isThereFileInParentDirectories((new File(fullInputFilePath)).getParent(), "template");
+    }
+
+    static String getLastFoundFile(){
+        return lastFoundFile;
+    }
+
     static String getFileExtension(String fileName) {
         String extension = "";
         int i = fileName.lastIndexOf(46);
@@ -130,7 +141,7 @@ public class FileUtils {
         return extension;
     }
 
-    static String getFileNameWithoutExtention(String fileName) {
+    static String getFileNameWithoutExtension(String fileName) {
         String extension = getFileExtension(fileName);
         return extension != null && extension.length() > 0 ? fileName.substring(0, fileName.length() - extension.length()) : fileName;
     }
