@@ -33,7 +33,8 @@ public class TemplateProcessor {
         List<String> lines = Files.readAllLines(sourcePath);
 
         Context context = new Context();
-        context.setVariable("sourceFileName", sourceFile);
+        context.setVariable("sourceFileName", sourcePath.getFileName());
+        context.setVariable("sourceFilePath", sourceFile);
         context.setVariable("sourceFileSizeBytes", sourceFileBytes.length);
         context.setVariable("stringListHex", stringListHex);
         context.setVariable("linesList", lines);
