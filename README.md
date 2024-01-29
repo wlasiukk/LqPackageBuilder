@@ -3,7 +3,7 @@ Liquibase automation tool, focused on SQL and ORACLE APEX
 
 
 ---
-To use templating when providing changeSet files there must be file named "template" in source file folder or any parent folder
+To use templating (https://www.thymeleaf.org/) when providing changeSet files there must be file named "template" in source file folder or any parent folder
 
 When using template following variable are available :
  - sourceFileName - only file name without path
