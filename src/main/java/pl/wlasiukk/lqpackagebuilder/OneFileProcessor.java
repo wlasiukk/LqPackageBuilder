@@ -68,7 +68,8 @@ public class OneFileProcessor {
                                 OracleApexFileConverter.convertApexSqlToLiquibaseFormat(FileUtils.readFile(fullOutputFilePath))
                         ).getBytes(),
                         new OpenOption[]{StandardOpenOption.TRUNCATE_EXISTING});
-            } else if (FileUtils.isTemplateProvided(this.builderContext, fileName)) {
+            }
+            if (FileUtils.isTemplateProvided(this.builderContext, fileName)) {
                 String templateFileName = FileUtils.getLastFoundFile();
                 LOGGER.info("TEMPLATE source detected - applying converter");
                 Files.write(
