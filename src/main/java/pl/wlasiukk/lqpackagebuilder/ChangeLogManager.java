@@ -90,7 +90,7 @@ public class ChangeLogManager {
     }
 
     public static String buildSqlFileChangeSet(String fileName, BuilderContext builderContext, VTDNav vn, String rollback) throws NavException {
-        String changeSet = "\n\t<changeSet id=\"" + getNextChangeSetId(builderContext, vn) + "\" author=\"" + getOsUser() + "\" failOnError=\"true\">\n\t\t<!-- " + getCurrentDateAsString() + " " + getOsUser() + "@" + getHostName() + " : LqPackageBuilder:" + BuilderContext.getVersion() + " -->\n\t\t<comment>" + fileName + "</comment>\n\t\t<sqlFile path=\"" + (builderContext.getInstallDirectory() + File.separator + fileName).replace('\\', '/') + "\"  stripComments=\"false\" endDelimiter=\"" + getSplitDelimiter(builderContext, fileName) + "\"  splitStatements=\"" + getSplitStatements(builderContext, fileName) + "\" relativeToChangelogFile=\"true\"/>\n\t\t<rollback>" + rollback + "</rollback>\n\t</changeSet>";
+        String changeSet = "\n\t<changeSet id=\"" + getNextChangeSetId(builderContext, vn) + "\" author=\"" + getOsUser() + "\" failOnError=\"true\">\n\t\t<!-- " + getCurrentDateAsString() + " " + getOsUser() + "@" + getHostName() + " : LqPackageBuilder:" + BuilderContext.getVersion() + " -->\n\t\t<comment>" + fileName.replace('\\', '/') + "</comment>\n\t\t<sqlFile path=\"" + (builderContext.getInstallDirectory() + File.separator + fileName).replace('\\', '/') + "\"  stripComments=\"false\" endDelimiter=\"" + getSplitDelimiter(builderContext, fileName) + "\"  splitStatements=\"" + getSplitStatements(builderContext, fileName) + "\" relativeToChangelogFile=\"true\"/>\n\t\t<rollback>" + rollback + "</rollback>\n\t</changeSet>";
         return changeSet;
     }
 

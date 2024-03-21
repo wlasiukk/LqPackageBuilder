@@ -8,11 +8,15 @@ package pl.wlasiukk.lqpackagebuilder;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -139,7 +143,7 @@ public class BuilderContext {
         options.addOption(output);
         Option pname = new Option("p", "packageName", true, "name of package witch changes - ie. branch name [can not be HEAD or MASTER], JIRA etc ");
         options.addOption(pname);
-        Option filename = new Option("f", "fileName", true, "changed file name - will be copied to output directory [must be relative to <sourceDirectory>]");
+        Option filename = new Option("f", "fileName", true, "changed file name - will be copied to output directory [relative to <sourceDirectory> OR full path OR unique filename with or without parent directory]");
         options.addOption(filename);
         Option gitlist = new Option("g", "gitList", true, "process files reportd by git as M=modified; C=changed; A=added; U=untracked; X=all previous one [default=X]");
         options.addOption(gitlist);
@@ -229,14 +233,36 @@ public class BuilderContext {
             valid = false;
         }
 
-        if (this.fileName != null && !Files.exists(Paths.get(this.sourceDirectory + this.fileName), new LinkOption[0])) {
+        if (Files.exists(Paths.get(this.fileName), new LinkOption[0])) {
+            // full path
+            this.fileName = Paths.get(this.sourceDirectory).toAbsolutePath().relativize(Paths.get(this.fileName)).toString();
+            LOGGER.log(Level.INFO, "fileName set to : {0}", this.fileName);
+        } else if (this.fileName != null && !Files.exists(Paths.get(this.sourceDirectory + this.fileName), new LinkOption[0])) {
             if (Files.exists(Paths.get(this.sourceDirectory + File.separator + this.fileName), new LinkOption[0])) {
+                // path relative to sourceDirectory
                 this.fileName = File.separator + this.fileName;
             } else if (this.fileName.startsWith("..") && Files.exists(Paths.get(this.sourceDirectory + File.separator + this.fileName.substring(3)), new LinkOption[0])) {
+                // path relative to sourceDirectory with "../" as prefix
                 this.fileName = this.fileName.substring(3);
             } else {
-                LOGGER.log(Level.SEVERE, "file {0} does not exists", this.sourceDirectory + this.fileName);
-                valid = false;
+                /* trying to find file */
+                List<String> files_list = FileUtils.findFileRecurseDown(this.sourceDirectory, this.fileName);
+                List<String> files_list2 = files_list.stream().filter(fileName -> !fileName.startsWith( this.sourceDirectory + File.separator + this.outputDirectory)).collect(Collectors.toList());
+                if (files_list2.size()==1 && Files.exists(Paths.get(files_list2.get(0)))) {
+                    // found 1 file - processing it !
+                    LOGGER.log(Level.INFO, "input file {0} found here : {1}", new Object[]{this.fileName, files_list.get(0)});
+                    String newFileName = Paths.get(this.sourceDirectory).toAbsolutePath().relativize(Paths.get(files_list2.get(0))).toString();
+                    LOGGER.log(Level.INFO, "fileName set to : {0}", newFileName);
+                    this.fileName = newFileName;
+                } else if (files_list2.size()>0){
+                    // found multiple files - error !
+                    int maxPrintSize=5;
+                    LOGGER.log(Level.SEVERE, "file {0} found in multiple places : \n{1} {2}", new Object[]{this.fileName, String.join("\n", files_list2.stream().limit(maxPrintSize).collect(Collectors.toList())), (files_list2.size()>maxPrintSize?"... of all "+files_list2.size():"")});
+                    valid = false;
+                } else {
+                    LOGGER.log(Level.SEVERE, "file {0} does not exists", this.sourceDirectory + this.fileName);
+                    valid = false;
+                }
             }
         }
 
@@ -262,7 +288,7 @@ public class BuilderContext {
     }
 
     public static String getVersion() {
-        return "0.1.2";
+        return "0.1.3";
     }
 
     public String getFullOutputDirectoryPath() {

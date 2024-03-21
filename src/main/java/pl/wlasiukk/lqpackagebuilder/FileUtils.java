@@ -11,10 +11,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileUtils {
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class.getName());
@@ -28,11 +33,11 @@ public class FileUtils {
         String outStr = "";
         String lastPath = "";
         int pathNr = 0;
-        String[] var5 = paths;
-        int var6 = paths.length;
+        String[] paths_arr = paths;
+        int paths_arr_length = paths_arr.length;
 
-        for(int var7 = 0; var7 < var6; ++var7) {
-            String path = var5[var7];
+        for(int i = 0; i < paths_arr_length; ++i) {
+            String path = paths_arr[i];
             ++pathNr;
             if (pathNr > 1 && !path.startsWith(dirSeparator) && !lastPath.endsWith(dirSeparator)) {
                 outStr = outStr + dirSeparator;
@@ -100,6 +105,23 @@ public class FileUtils {
                 return currentDir;
             }
         }
+    }
+
+    public static List<String> findFileRecurseDown(String directoryName, String fileName) {
+        List<String> files_list = new ArrayList<String>();
+        Path startPath = Paths.get(directoryName);
+        try (Stream<Path> stream = Files.walk(startPath, Integer.MAX_VALUE)) {
+            List<String> collect = stream
+                    .map(String::valueOf)
+                    .sorted()
+                    .filter(filename -> filename.endsWith(File.separator+fileName))
+                    .collect(Collectors.toList())
+                    ;
+            files_list.addAll(collect);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return files_list;
     }
 
     public static boolean isThereFileInParentDirectories(String directoryName, String fileNameRegexp) {
