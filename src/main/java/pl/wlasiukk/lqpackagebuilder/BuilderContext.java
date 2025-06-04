@@ -42,6 +42,7 @@ public class BuilderContext {
     private String sourceDirectory;
     private String outputDirectory;
     private String fileName;
+    private String taskDescription;
     private boolean renumerate;
     private boolean newVersions;
 
@@ -133,6 +134,19 @@ public class BuilderContext {
         this.fileName = fileName;
     }
 
+    public String getTaskDescription() {
+        return taskDescription;
+    }
+
+    public String getTaskDescription4ID() {
+        if (taskDescription == null) return "";
+        return taskDescription.split(" ")[0];
+    }
+
+    public void setTaskDescription(String taskDescription) {
+        this.taskDescription = taskDescription;
+    }
+
     public BuilderContext(String[] args) throws ParseException {
         Options options = new Options();
         Option input = new Option("s", "sourceDirectory", true, "[required] base repository directory");
@@ -162,6 +176,8 @@ public class BuilderContext {
         options.addOption(newVersionopt);
         Option loglvl = new Option("l", "logLevel", true, "log level [FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE, ALL, OFF]");
         options.addOption(loglvl);
+        Option taskDescription = new Option("td", "taskDescription", true, "task description (ie JIRA number with title)");
+        options.addOption(taskDescription);
         if (args.length == 0 || "help".equals(args[0])) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.setOptionComparator((Comparator)null);
@@ -190,6 +206,7 @@ public class BuilderContext {
         this.setRenumerate(cmd.hasOption("renumerate"));
         this.setNewVersions(cmd.hasOption("newVersions"));
         this.logLevel = cmd.getOptionValue("logLevel");
+        this.taskDescription = cmd.getOptionValue("taskDescription");
         if (cmd.hasOption("splitExtentions")) {
             this.splitExtentions = cmd.getOptionValues("splitExtentions");
         } else {

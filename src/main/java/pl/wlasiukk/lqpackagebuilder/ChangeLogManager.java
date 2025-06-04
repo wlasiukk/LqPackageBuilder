@@ -90,7 +90,15 @@ public class ChangeLogManager {
     }
 
     public static String buildSqlFileChangeSet(String fileName, BuilderContext builderContext, VTDNav vn, String rollback) throws NavException {
-        String changeSet = "\n\t<changeSet id=\"" + getNextChangeSetId(builderContext, vn) + "\" author=\"" + getOsUser() + "\" failOnError=\"true\">\n\t\t<!-- " + getCurrentDateAsString() + " " + getOsUser() + "@" + getHostName() + " : LqPackageBuilder:" + BuilderContext.getVersion() + " -->\n\t\t<comment>" + fileName.replace('\\', '/') + "</comment>\n\t\t<sqlFile path=\"" + (builderContext.getInstallDirectory() + File.separator + fileName).replace('\\', '/') + "\"  stripComments=\"false\" endDelimiter=\"" + getSplitDelimiter(builderContext, fileName) + "\"  splitStatements=\"" + getSplitStatements(builderContext, fileName) + "\" relativeToChangelogFile=\"true\"/>\n\t\t<rollback>" + rollback + "</rollback>\n\t</changeSet>";
+        String changeSet = "\n\t" +
+                "<changeSet id=\"" + getNextChangeSetId(builderContext, vn) + "\" author=\"" + getOsUser() + "\" failOnError=\"true\">\n\t\t"+
+                "<!-- " + getCurrentDateAsString() + " " + getOsUser() + "@" + getHostName() + " : LqPackageBuilder:" + BuilderContext.getVersion() + " -->\n\t\t"+
+                (builderContext.getTaskDescription() == null ? "" : "<!-- TASK : " + builderContext.getTaskDescription()+ " -->\n\t\t" ) +
+                "<comment>" + fileName.replace('\\', '/') + (builderContext.getTaskDescription()==null ? "" : " "+getTaskDescription4ID(builderContext)) + "</comment>\n\t\t" +
+                "<sqlFile path=\"" + (builderContext.getInstallDirectory() + File.separator + fileName).replace('\\', '/') + "\"  stripComments=\"false\" endDelimiter=\""
+                    + getSplitDelimiter(builderContext, fileName) + "\"  splitStatements=\"" + getSplitStatements(builderContext, fileName) + "\" relativeToChangelogFile=\"true\"/>\n\t\t" +
+                "<rollback>" + rollback + "</rollback>\n\t" +
+                "</changeSet>";
         return changeSet;
     }
 
@@ -121,21 +129,29 @@ public class ChangeLogManager {
                         }
                         LOGGER.finer("found currentId="+currentId+"; newChangeSetIdNumber="+newChangeSetIdNumber);
                     } catch (NumberFormatException nfe){
-                        // doing nothing, changeset id was nat ended by number - manual modified ?
+                        // doing nothing, changeset id was not ended by number - manual modified ?
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.info("computing NextChangeSetId in safer way, but it is finding first gap in numeration ...");
-            for(changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber; isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn); changeSetId = builderContext.getPackageName() + "." + newChangeSetIdNumber) {
+            for(changeSetId = builderContext.getPackageName() + "." + getTaskDescription4ID(builderContext) + newChangeSetIdNumber;
+                isXpathPresent("//changeSet[@id=\"" + changeSetId + "\"]", vn);
+                changeSetId = builderContext.getPackageName() + "." + getTaskDescription4ID(builderContext) + newChangeSetIdNumber)
+            {
                 ++newChangeSetIdNumber;
             }
         }
-        String newId = builderContext.getPackageName() + "." + newChangeSetIdNumber;
+        String newId = builderContext.getPackageName() + "." + getTaskDescription4ID(builderContext) + newChangeSetIdNumber;
         LOGGER.finer("new id = "+newId);
         return newId;
     }
+
+    private static String getTaskDescription4ID(BuilderContext builderContext) {
+        return builderContext.getTaskDescription() == null ? "" : builderContext.getTaskDescription4ID() + ".";
+    }
+
 
     public static void addTag(BuilderContext builderContext, String tagName, boolean afterHead) throws Exception {
         String tag = "\n\t<changeSet id=\"" + tagName + "\" author=\"" + getOsUser() + "\">\n\t\t<tagDatabase tag=\"" + tagName + "\" />\n\t</changeSet>\n";
