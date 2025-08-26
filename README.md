@@ -9,6 +9,7 @@ When using template following variable are available :
  - sourceFileName - only file name without path
  - sourceFilePath - full file path with name
  - sourceFileSizeBytes
- - stringListHex - file changed to Hex and then divided to 200 length pieces - usefully when using wwv_flow_imp.g_varchar2_table in ORACLE  
+ - stringListHex - file changed to Hex and then divided to 200 length pieces - usefully when using wwv_flow_imp.g_varchar2_table in ORACLE
+ - stringListCompressedHex - file compressed and changed to Hex and then divided to 200 length pieces - usefully when using wwv_flow_imp.g_varchar2_table and utl_compress.lz_uncompress in ORACLE
  - linesList - file divided to lines 
  - wholeFile

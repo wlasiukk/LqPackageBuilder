@@ -305,7 +305,7 @@ public class BuilderContext {
     }
 
     public static String getVersion() {
-        return "0.1.3";
+        return "0.1.4";
     }
 
     public String getFullOutputDirectoryPath() {
